@@ -1,8 +1,11 @@
-﻿using Avalonia.Controls;
-using Avalonia.Platform.Storage;
+﻿using Avalonia.Platform.Storage;
+using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.Mpeg;
 using VLC.Net.Core.Enums;
 using VLC.Net.Core.Infrastructure;
 using VLC.Net.Core.Models;
+using Directory = MetadataExtractor.Directory;
 
 namespace VLC.Net.Core.Services;
 
@@ -10,8 +13,6 @@ public sealed class FilesService : IFilesService
 {
     public async Task<StorageFileQueryResult?> GetNeighboringFilesQueryAsync(StorageFile file, QueryOptions? options = null)
     {
-
-
         try
         {
             StorageFolder? parent = await file.GetParentAsync();
@@ -48,7 +49,7 @@ public sealed class FilesService : IFilesService
         // The following line return a native vector view.
         // It does not fetch all the files in the directory at once.
         // No need for manual paging!
-        IReadOnlyList<IStorageFile> files = 
+        IReadOnlyList<IStorageFile> files =
             await neighboringFilesQuery.GetFilesAsync(0, startIndex);
         return files.LastOrDefault(x => x.IsSupported());
     }
@@ -60,7 +61,7 @@ public sealed class FilesService : IFilesService
         return folder.CreateItemQueryWithOptions(queryOptions);
     }
 
-    public asybnc Task<uint> GetSupportedItemCountAsync(IStorageFolder folder)
+    public async Task<uint> GetSupportedItemCountAsync(IStorageFolder folder)
     {
         QueryOptions queryOptions = new(CommonFileQuery.DefaultQuery, FilesHelpers.SupportedFormats);
         return folder.CreateItemQueryWithOptions(queryOptions).GetItemCountAsync();
@@ -72,7 +73,7 @@ public sealed class FilesService : IFilesService
         return picker.PickSingleFileAsync();
     }
 
-    public async Task<IReadOnlyList<IStorageFile>?> 
+    public async Task<IReadOnlyList<IStorageFile>?>
         PickMultipleFilesAsync(params string[] formats)
     {
         // Get the top-level window from a control
@@ -183,7 +184,6 @@ public sealed class FilesService : IFilesService
             // Ownership issue?
         }
     }
-
     public async Task<MediaInfo> GetMediaInfoAsync(StorageFile file)
     {
         MediaPlaybackType mediaType = FilesHelpers.GetMediaTypeForFile(file);
@@ -234,4 +234,46 @@ public sealed class FilesService : IFilesService
 
         return picker;
     }
+
+    public async Task<Dictionary<MetadataKeys, string>>
+        GetMetadataAsync(IStorageFile file, params MetadataKeys[] metadataKeys)
+    {
+        Dictionary<MetadataKeys, string> dct = new();
+        
+        IReadOnlyList<Directory> directories;
+        await using (var stream = await file.OpenReadAsync())
+            directories = ImageMetadataReader.ReadMetadata(stream);
+
+        foreach (var key in metadataKeys)
+        {
+            LookupMetadataInDirectory(directories, key);
+            continue;
+
+            void LookupMetadataInDirectory(IReadOnlyList<Directory> readOnlyList, MetadataKeys k)
+            {
+                foreach (var directory in directories)
+                foreach (var tag in directory.Tags)
+                    if (tag.Name.Equals(k.ToString(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        dct.Add(key, tag.Description ?? string.Empty);
+                        return;
+                    }
+            }
+        }
+    }
 }
+
+public enum MetadataKeys
+{
+    Artist,
+    Album,
+    Title,
+    Genre,
+    Year,
+    Track,
+    Disc,
+    Duration,
+}
+
+public record MetadataKeyValuePair(MetadataKeys Key,
+    string Value);

@@ -74,7 +74,7 @@ public sealed partial class StorageItemViewModel : ObservableObject
                         };
 
                         IDictionary<string, object> additionalProperties =
-                            await file.RetrievePropertiesAsync(additionalPropertyKeys);
+                            await file.GetMetadata(additionalPropertyKeys);
 
                         if (additionalProperties[SystemProperties.Music.Artist] is string[] { Length: > 0 } contributingArtists)
                         {
