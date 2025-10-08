@@ -11,9 +11,7 @@ namespace VLC.Net.Core.Services
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        string GetProfileFileName(string filename);
-        
-        
+        string GetSettingsFileName(string filename);
         
         Task<StorageFileQueryResult?> GetNeighboringFilesQueryAsync(IStorageFile file, QueryOptions? options = null);
         Task<IStorageFile?> GetNextFileAsync(IStorageFile currentFile,
@@ -33,7 +31,5 @@ namespace VLC.Net.Core.Services
         Task<T> LoadFromDiskAsync<T>(IStorageFolder folder, string fileName);
         Task<T> LoadFromDiskAsync<T>(IStorageFile file);
         Task<MediaInfo> GetMediaInfoAsync(IStorageFile file);
-        
-        
     }
 }

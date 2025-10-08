@@ -7,11 +7,11 @@ namespace VLC.Net.Core.Services;
 
 public sealed class FilesService : IFilesService
 {
-    public async Task<StorageFileQueryResult?> GetNeighboringFilesQueryAsync(StorageFile file, QueryOptions? options = null)
+    public async Task<StorageFileQueryResult?> GetNeighboringFilesQueryAsync(IStorageFile file, QueryOptions? options = null)
     {
         try
         {
-            StorageFolder? parent = await file.GetParentAsync();
+            IStorageFolder? parent = await file.GetParentAsync();
             options ??= new QueryOptions(CommonFileQuery.DefaultQuery, FilesHelpers.SupportedFormats);
             StorageFileQueryResult? queryResult = parent?.CreateFileQueryWithOptions(options);
             return queryResult;

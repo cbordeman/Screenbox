@@ -7,6 +7,9 @@ using Directory = MetadataExtractor.Directory;
 
 namespace VLC.Net.Core.Helpers;
 
+/// <summary>
+/// These should all work on mobile and desktop.
+/// </summary>
 public static class FilesHelpers
 {
     public static ImmutableArray<string> SupportedAudioFormats { get; } =
@@ -130,4 +133,5 @@ public static class FilesHelpers
         }
         return dct;
     }
+    
 }
