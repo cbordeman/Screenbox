@@ -120,7 +120,7 @@ public static class FilesHelpers
         {
             foreach (var directory in directories)
             foreach (var tag in directory.Tags)
-                if (tag.Name.Equals(k.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (tag.Name.Equals(key.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     dct.Add(key, tag.Description ?? string.Empty);
                     goto OutermostLoop;
