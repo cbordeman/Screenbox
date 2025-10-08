@@ -1,6 +1,5 @@
 ﻿using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Collections;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Models;
 using VLC.Net.Core.Services;
 

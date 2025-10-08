@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using LibVLCSharp.Shared;
 using VLC.Net.Core.Factories;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Messages;
 using VLC.Net.Core.Models;
 using VLC.Net.Core.Playback;

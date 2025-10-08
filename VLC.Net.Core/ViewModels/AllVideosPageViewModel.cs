@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Services;
 
 namespace VLC.Net.Core.ViewModels

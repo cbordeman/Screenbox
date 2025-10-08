@@ -5,7 +5,6 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Models;
 using VLC.Net.Core.Services;
 

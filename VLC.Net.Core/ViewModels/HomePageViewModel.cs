@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -75,9 +76,9 @@ namespace VLC.Net.Core.ViewModels
 
         private async Task UpdateRecentMediaListAsync(bool loadMediaDetails)
         {
-            string[] tokens = StorageApplicationPermissions.MostRecentlyUsedList.Entries
+            string[] tokens = mruService.Entries
                 .OrderByDescending(x => x.Metadata)
-                .Select(x => x.Token)
+                .Select(x => x.FilePath)
                 .Where(t => !string.IsNullOrEmpty(t))
                 .ToArray();
 
@@ -90,12 +91,12 @@ namespace VLC.Net.Core.ViewModels
             for (int i = 0; i < tokens.Length; i++)
             {
                 string token = tokens[i];
-                StorageFile? file = await ConvertMruTokenToStorageFileAsync(token);
+                var file = await CheckFile(token);
                 if (file == null)
                 {
                     try
                     {
-                        StorageApplicationPermissions.MostRecentlyUsedList.Remove(token);
+                        mruService.Remove(token);
                     }
                     catch (Exception e)
                     {
@@ -106,20 +107,19 @@ namespace VLC.Net.Core.ViewModels
 
                 // TODO: Add support for playing playlist file from home page
                 if (file.IsSupportedPlaylist()) continue;
-                if (!_dispatcher.HasThreadAccess)
-                    throw new InvalidOperationException("This method must be called on the UI thread.");
-
+                Dispatcher.UIThread.VerifyAccess();
+                
                 if (i >= Recent.Count)
                 {
                     MediaViewModel media = mediaFactory.GetSingleton(file);
                     pathToMruMappings[media.Location] = token;
                     Recent.Add(media);
                 }
-                else if (Recent[i].Source is StorageFile existing)
+                else if (Recent[i].Source is IStorageFile existing)
                 {
                     try
                     {
-                        if (!file.IsEqual(existing)) MoveOrInsert(file, token, i);
+                        if (!file.Path == existing.Path) MoveOrInsert(file, token, i);
                     }
                     catch (Exception)
                     {
@@ -143,14 +143,15 @@ namespace VLC.Net.Core.ViewModels
             await Task.WhenAll(loadingTasks);
         }
 
-        private void MoveOrInsert(StorageFile file, string token, int desiredIndex)
+        private void MoveOrInsert(IStorageFile file, string token, int desiredIndex)
         {
             // Find index of the VM of the same file
             // There is no FindIndex method for ObservableCollection :(
             int existingIndex = -1;
             for (int j = desiredIndex + 1; j < Recent.Count; j++)
             {
-                if (Recent[j].Source is StorageFile existingFile && file.IsEqual(existingFile))
+                if (Recent[j].Source is IStorageFile existingFile &&  
+                    EqualityComparer<Uri>.Default.Equals(file.Path, existingFile.Path))
                 {
                     existingIndex = j;
                     break;
@@ -205,11 +206,11 @@ namespace VLC.Net.Core.ViewModels
             Messenger.Send(new PlayMediaMessage(files));
         }
 
-        private static async Task<StorageFile?> ConvertMruTokenToStorageFileAsync(string token)
+        private async Task<IStorageFile?> CheckFile(string filePath)
         {
             try
             {
-                return await StorageApplicationPermissions.MostRecentlyUsedList.GetFileAsync(token,
+                return await mruService.GetFileAsync(filePath,
                     AccessCacheOptions.SuppressAccessTimeUpdate);
             }
             catch (UnauthorizedAccessException)

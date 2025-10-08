@@ -1,5 +1,4 @@
 ﻿using VLC.Net.Core.Factories;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Services;
 using VLC.Net.Core.ViewModels;
 using AlbumDetailsPageViewModel = VLC.Net.Core.ViewModels.AlbumDetailsPageViewModel;

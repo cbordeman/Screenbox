@@ -1,17 +1,16 @@
 ﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using VLC.Net.Core.Enums;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Database;
 
 namespace VLC.Net.Core.Services
 {
     public sealed class SettingsService : ISettingsService
     {
-        readonly AppDbContext dbContext;
+        readonly SettingsDbContext dbContext;
         readonly Dictionary<string, object?> cache = new();
         
-        public SettingsService(IDbContextFactory<AppDbContext> dbContextFactory)
+        public SettingsService(IDbContextFactory<SettingsDbContext> dbContextFactory)
         {
             this.dbContext = dbContextFactory.CreateDbContext();
         
@@ -39,7 +38,7 @@ namespace VLC.Net.Core.Services
             SetDefault(GlobalArgumentsKey, string.Empty);
             SetDefault(PlayerShowChaptersKey, true);
 
-            // Device family specific overrides
+            // Device-family-specific overrides
             if (SystemInformation.IsXbox)
             {
                 SetValue(PlayerTapGestureKey, false);
@@ -52,27 +51,27 @@ namespace VLC.Net.Core.Services
             dbContext.SaveChanges();
         }
 
-        private const string GeneralThemeKey = "General/Theme";
-        private const string PlayerAutoResizeKey = "Player/AutoResize";
-        private const string PlayerVolumeGestureKey = "Player/Gesture/Volume";
-        private const string PlayerSeekGestureKey = "Player/Gesture/Seek";
-        private const string PlayerTapGestureKey = "Player/Gesture/Tap";
-        private const string PlayerShowControlsKey = "Player/ShowControls";
-        private const string PlayerLivelyPathKey = "Player/Lively/Path";
-        private const string LibrariesUseIndexerKey = "Libraries/UseIndexer";
-        private const string LibrariesSearchRemovableStorageKey = "Libraries/SearchRemovableStorage";
-        private const string GeneralShowRecent = "General/ShowRecent";
-        private const string GeneralEnqueueAllInFolder = "General/EnqueueAllInFolder";
-        private const string GeneralRestorePlaybackPosition = "General/RestorePlaybackPosition";
-        private const string AdvancedModeKey = "Advanced/IsEnabled";
-        private const string AdvancedVideoUpscaleKey = "Advanced/VideoUpscale";
-        private const string AdvancedMultipleInstancesKey = "Advanced/MultipleInstances";
-        private const string GlobalArgumentsKey = "Values/GlobalArguments";
-        private const string PersistentVolumeKey = "Values/Volume";
-        private const string MaxVolumeKey = "Values/MaxVolume";
-        private const string PersistentRepeatModeKey = "Values/RepeatMode";
-        private const string PersistentSubtitleLanguageKey = "Values/SubtitleLanguage";
-        private const string PlayerShowChaptersKey = "Player/ShowChapters";
+        const string GeneralThemeKey = "General/Theme";
+        const string PlayerAutoResizeKey = "Player/AutoResize";
+        const string PlayerVolumeGestureKey = "Player/Gesture/Volume";
+        const string PlayerSeekGestureKey = "Player/Gesture/Seek";
+        const string PlayerTapGestureKey = "Player/Gesture/Tap";
+        const string PlayerShowControlsKey = "Player/ShowControls";
+        const string PlayerLivelyPathKey = "Player/Lively/Path";
+        const string LibrariesUseIndexerKey = "Libraries/UseIndexer";
+        const string LibrariesSearchRemovableStorageKey = "Libraries/SearchRemovableStorage";
+        const string GeneralShowRecent = "General/ShowRecent";
+        const string GeneralEnqueueAllInFolder = "General/EnqueueAllInFolder";
+        const string GeneralRestorePlaybackPosition = "General/RestorePlaybackPosition";
+        const string AdvancedModeKey = "Advanced/IsEnabled";
+        const string AdvancedVideoUpscaleKey = "Advanced/VideoUpscale";
+        const string AdvancedMultipleInstancesKey = "Advanced/MultipleInstances";
+        const string GlobalArgumentsKey = "Values/GlobalArguments";
+        const string PersistentVolumeKey = "Values/Volume";
+        const string MaxVolumeKey = "Values/MaxVolume";
+        const string PersistentRepeatModeKey = "Values/RepeatMode";
+        const string PersistentSubtitleLanguageKey = "Values/SubtitleLanguage";
+        const string PlayerShowChaptersKey = "Player/ShowChapters";
 
         public bool UseIndexer
         {
@@ -118,7 +117,7 @@ namespace VLC.Net.Core.Services
 
         public string PersistentSubtitleLanguage
         {
-            get => GetValue<string>(PersistentSubtitleLanguageKey) ?? string.Empty;
+            get => GetRefValue<string>(PersistentSubtitleLanguageKey) ?? string.Empty;
             set => SetValue(PersistentSubtitleLanguageKey, value);
         }
 
@@ -166,7 +165,7 @@ namespace VLC.Net.Core.Services
 
         public string GlobalArguments
         {
-            get => GetValue<string>(GlobalArgumentsKey) ?? string.Empty;
+            get => GetRefValue<string>(GlobalArgumentsKey) ?? string.Empty;
             set => SetValue(GlobalArgumentsKey, SanitizeArguments(value));
         }
 
@@ -190,7 +189,7 @@ namespace VLC.Net.Core.Services
 
         public string LivelyActivePath
         {
-            get => GetValue<string>(PlayerLivelyPathKey) ?? string.Empty;
+            get => GetRefValue<string>(PlayerLivelyPathKey) ?? string.Empty;
             set => SetValue(PlayerLivelyPathKey, value);
         }
 
@@ -200,16 +199,30 @@ namespace VLC.Net.Core.Services
             set => SetValue(PlayerShowChaptersKey, value);
         }
 
-        private T? GetValue<T>(string key)
+        T GetValue<T>(string key) where T: struct
         {
-            if (cache.TryGetValue(key, out object value))
+            if (cache.TryGetValue(key, out object? value))
+            {
+                if (value is null)
+                    throw new InvalidOperationException($"Value for key {key} is null.");
                 return (T)value;
+            }
 
             return default;
         }
 
-        private void SetValue<T>(string key, T val)
+        T? GetRefValue<T>(string key) where T: class
         {
+            if (cache.TryGetValue(key, out object? value))
+                return (T?)value;
+
+            return null;
+        }
+
+        void SetValue<T>(string key, T? val)
+        {
+            if (typeof(T).IsValueType && val == null)
+                throw new ArgumentNullException(nameof(val));
             cache[key] = val;
             var setting = CreateSetting(key, val);
             dbContext.Settings.Update(setting);
@@ -218,8 +231,11 @@ namespace VLC.Net.Core.Services
 
         // This should only be called during the constructor to set defaults,
         // just after all the database values are loaded into cache.
-        private void SetDefault<T>(string key, T val)
+        void SetDefault<T>(string key, T val)
         {
+            if (typeof(T).IsValueType && val == null)
+                throw new ArgumentNullException(nameof(val));
+            
             if (cache.TryGetValue(key, out object? v))
             {
                 // Already in db / cache, update value if different.
@@ -232,9 +248,9 @@ namespace VLC.Net.Core.Services
             }
             else
             {
-                // Not in cache, must not be in db also, since all the db
-                // settings were loaded into the cache before any calls to
-                // this method.
+                // Not in cache, must not be in db also, since all
+                // the db settings were loaded into the cache before
+                // any calls to this method.
                 var setting = CreateSetting(key, val);
                 dbContext.Settings.Add(setting);
                 cache[key] = val;
@@ -248,16 +264,11 @@ namespace VLC.Net.Core.Services
                 Value = val == null ? null : JsonSerializer.Serialize(val)
             };
 
-        private static string SanitizeArguments(string raw)
+        static string SanitizeArguments(string raw)
         {
             string[] args = raw.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Where(s => s.StartsWith('-') && s != "--").ToArray();
             return string.Join(' ', args);
-        }
-
-        async Task Save()
-        {
-            await dbContext.SaveChangesAsync();
         }
     }
 }

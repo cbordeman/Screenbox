@@ -1,7 +1,5 @@
-﻿#nullable enable
-
-using Avalonia.Controls;
-using Avalonia.Platform.Storage;
+﻿using Avalonia.Platform.Storage;
+using VLC.Net.Core.Infrastructure;
 using VLC.Net.Core.Models;
 
 namespace VLC.Net.Core.Services
@@ -17,23 +15,23 @@ namespace VLC.Net.Core.Services
         
         
         
-        Task<StorageFileQueryResult?> GetNeighboringFilesQueryAsync(StorageFile file, QueryOptions? options = null);
-        Task<StorageFile?> GetNextFileAsync(IStorageFile currentFile,
+        Task<StorageFileQueryResult?> GetNeighboringFilesQueryAsync(IStorageFile file, QueryOptions? options = null);
+        Task<IStorageFile?> GetNextFileAsync(IStorageFile currentFile,
             StorageFileQueryResult neighboringFilesQuery);
-        Task<StorageFile?> GetPreviousFileAsync(IStorageFile currentFile,
+        Task<IStorageFile?> GetPreviousFileAsync(IStorageFile currentFile,
             StorageFileQueryResult neighboringFilesQuery);
-        StorageItemQueryResult GetSupportedItems(StorageFolder folder);
-        IAsyncOperation<uint> GetSupportedItemCountAsync(StorageFolder folder);
-        IAsyncOperation<StorageFile> PickFileAsync(params string[] formats);
+        StorageItemQueryResult GetSupportedItems(IStorageFolder folder);
+        Task<uint> GetSupportedItemCountAsync(IStorageFolder folder);
+        Task<IStorageFile> PickFileAsync(params string[] formats);
         Task<IReadOnlyList<IStorageFile>?> PickMultipleFilesAsync(params string[] formats);
-        IAsyncOperation<StorageFolder> PickFolderAsync();
+        Task<IStorageFolder> PickFolderAsync();
         Task OpenFileLocationAsync(string path);
-        Task OpenFileLocationAsync(StorageFile file);
+        Task OpenFileLocationAsync(IStorageFile file);
         void AddToRecent(IStorageItem item);
-        Task<StorageFile> SaveToDiskAsync<T>(StorageFolder folder, string fileName, T source);
-        Task SaveToDiskAsync<T>(StorageFile file, T source);
-        Task<T> LoadFromDiskAsync<T>(StorageFolder folder, string fileName);
-        Task<T> LoadFromDiskAsync<T>(StorageFile file);
-        Task<MediaInfo> GetMediaInfoAsync(StorageFile file);
+        Task<IStorageFile> SaveToDiskAsync<T>(IStorageFolder folder, string fileName, T source);
+        Task SaveToDiskAsync<T>(IStorageFile file, T source);
+        Task<T> LoadFromDiskAsync<T>(IStorageFolder folder, string fileName);
+        Task<T> LoadFromDiskAsync<T>(IStorageFile file);
+        Task<MediaInfo> GetMediaInfoAsync(IStorageFile file);
     }
 }

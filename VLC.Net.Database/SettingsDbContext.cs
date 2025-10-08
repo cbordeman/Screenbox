@@ -2,13 +2,13 @@
 
 namespace VLC.Net.Database;
 
-public class AppDbContext : DbContext
+public class SettingsDbContext : DbContext
 {
     public DbSet<Setting> Settings { get; set; }
 
     private readonly string dbPath;
 
-    public AppDbContext()
+    public SettingsDbContext()
     {
         var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var settingsDirectory = Path.Combine(userProfile, "VLC.Net");

@@ -17,14 +17,14 @@ sealed class Program
     public static void Main(string[] args)
     {
         Locator.CurrentMutable
-            .RegisterLazySingleton<IDbContextFactory<AppDbContext>>(
+            .RegisterLazySingleton<IDbContextFactory<SettingsDbContext>>(
                 () =>
                 {
-                    var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-                    return new PooledDbContextFactory<AppDbContext>(optionsBuilder.Options);
+                    var optionsBuilder = new DbContextOptionsBuilder<SettingsDbContext>();
+                    return new PooledDbContextFactory<SettingsDbContext>(optionsBuilder.Options);
                 });
 
-        var factory = Locator.Current.GetService<IDbContextFactory<AppDbContext>>();
+        var factory = Locator.Current.GetService<IDbContextFactory<SettingsDbContext>>();
         var dbContext = factory!.CreateDbContext();
         
         if (!dbContext.Database.EnsureCreated())

@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using LibVLCSharp.Shared;
-using VLC.Net.Core.Helpers;
 
 namespace VLC.Net.Core.Playback;
 public abstract class MediaTrack : IMediaTrack

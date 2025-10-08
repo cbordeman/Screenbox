@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using VLC.Net.Core.Factories;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Models;
 using VLC.Net.Core.ViewModels;
 using MediaViewModel = VLC.Net.Core.ViewModels.MediaViewModel;

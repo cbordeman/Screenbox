@@ -20,6 +20,11 @@
       <PackageReference Include="LibVLCSharp.Avalonia">
         <Version>3.9.4</Version>
       </PackageReference>
+      <PackageReference Include="MimeTypes">
+        <Version>2.5.2</Version>
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
       <PackageReference Include="Splat">
         <Version>17.1.1</Version>
       </PackageReference>

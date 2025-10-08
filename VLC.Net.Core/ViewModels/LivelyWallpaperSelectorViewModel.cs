@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Models;
 using VLC.Net.Core.Services;
 

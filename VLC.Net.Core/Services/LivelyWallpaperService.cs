@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System.IO.Compression;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Models;
 
 namespace VLC.Net.Core.Services;

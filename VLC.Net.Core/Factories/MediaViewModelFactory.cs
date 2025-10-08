@@ -1,4 +1,5 @@
-﻿using LibVLCSharp.Shared;
+﻿using Avalonia.Platform.Storage;
+using LibVLCSharp.Shared;
 using VLC.Net.Core.Playback;
 using VLC.Net.Core.Services;
 using MediaViewModel = VLC.Net.Core.ViewModels.MediaViewModel;
@@ -16,7 +17,7 @@ namespace VLC.Net.Core.Factories
             this.libVlcService = libVlcService;
         }
 
-        public MediaViewModel GetTransient(StorageFile file)
+        public MediaViewModel GetTransient(IStorageFile file)
         {
             return new MediaViewModel(libVlcService, file);
         }
@@ -43,9 +44,9 @@ namespace VLC.Net.Core.Factories
             return vm;
         }
 
-        public MediaViewModel GetSingleton(StorageFile file)
+        public MediaViewModel GetSingleton(IStorageFile file)
         {
-            string id = file.Path;
+            string id = file.Path.GetFilePath();
             if (references.TryGetValue(id, out WeakReference<MediaViewModel> reference) &&
                 reference.TryGetTarget(out MediaViewModel instance))
             {

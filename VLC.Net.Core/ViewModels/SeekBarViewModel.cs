@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using VLC.Net.Core.Common;
 using VLC.Net.Core.Enums;
 using VLC.Net.Core.Events;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Messages;
 using VLC.Net.Core.Models;
 using VLC.Net.Core.Playback;

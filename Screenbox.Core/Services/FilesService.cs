@@ -124,13 +124,13 @@ namespace Screenbox.Core.Services
 
         public async Task<T> LoadFromDiskAsync<T>(StorageFolder folder, string fileName)
         {
-            StorageFile file = await folder.GetFileAsync(fileName);
+            var file = await folder.GetFileAsync(fileName);
             return await LoadFromDiskAsync<T>(file);
         }
 
         public async Task<T> LoadFromDiskAsync<T>(StorageFile file)
         {
-            using Stream readStream = await file.OpenStreamForReadAsync();
+            using var readStream = await file.OpenStreamForReadAsync();
             return Serializer.Deserialize<T>(readStream);
             // using var dataReader = new StreamReader(readStream);
             // using var jsonReader = new JsonTextReader(dataReader);

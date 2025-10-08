@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using VLC.Net.Core.Enums;
-using VLC.Net.Core.Helpers;
+using VLC.Net.Core.Infrastructure;
 using VLC.Net.Core.Models;
 
 namespace VLC.Net.Core.Services;
@@ -39,7 +39,7 @@ public sealed class FilesService : IFilesService
         return files.FirstOrDefault(x => x.IsSupported());
     }
 
-    public async Task<StorageFile?> GetPreviousFileAsync(IStorageFile currentFile, StorageFileQueryResult neighboringFilesQuery)
+    public async Task<IStorageFile?> GetPreviousFileAsync(IStorageFile currentFile, StorageFileQueryResult neighboringFilesQuery)
     {
         // Due to limitations with NeighboringFilesQuery, manually find the previous supported file
         uint startIndex = await neighboringFilesQuery.FindStartIndexAsync(currentFile);
@@ -48,18 +48,19 @@ public sealed class FilesService : IFilesService
         // The following line return a native vector view.
         // It does not fetch all the files in the directory at once.
         // No need for manual paging!
-        IReadOnlyList<StorageFile> files = await neighboringFilesQuery.GetFilesAsync(0, startIndex);
+        IReadOnlyList<IStorageFile> files = 
+            await neighboringFilesQuery.GetFilesAsync(0, startIndex);
         return files.LastOrDefault(x => x.IsSupported());
     }
 
-    public StorageItemQueryResult GetSupportedItems(StorageFolder folder)
+    public StorageItemQueryResult GetSupportedItems(IStorageFolder folder)
     {
         // Don't use indexer when querying. Potential incomplete result.
         QueryOptions queryOptions = new(CommonFileQuery.DefaultQuery, FilesHelpers.SupportedFormats);
         return folder.CreateItemQueryWithOptions(queryOptions);
     }
 
-    public IAsyncOperation<uint> GetSupportedItemCountAsync(StorageFolder folder)
+    public asybnc Task<uint> GetSupportedItemCountAsync(IStorageFolder folder)
     {
         QueryOptions queryOptions = new(CommonFileQuery.DefaultQuery, FilesHelpers.SupportedFormats);
         return folder.CreateItemQueryWithOptions(queryOptions).GetItemCountAsync();
@@ -75,7 +76,7 @@ public sealed class FilesService : IFilesService
         PickMultipleFilesAsync(params string[] formats)
     {
         // Get the top-level window from a control
-        var topLevel = TopLevelHelper.GetTopLevel();
+        var topLevel = TopLevelDesktopHelper.GetTopLevel();
 
         // Define file picker options
         var options = new FilePickerOpenOptions

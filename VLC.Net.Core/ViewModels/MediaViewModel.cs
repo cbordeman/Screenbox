@@ -1,13 +1,15 @@
 ﻿#nullable enable
 
 using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using LibVLCSharp.Shared;
 using VLC.Net.Core.Common;
 using VLC.Net.Core.Enums;
 using VLC.Net.Core.Factories;
-using VLC.Net.Core.Helpers;
 using VLC.Net.Core.Messages;
 using VLC.Net.Core.Models;
 using VLC.Net.Core.Playback;
@@ -42,18 +44,18 @@ namespace VLC.Net.Core.ViewModels
         public string TrackNumberText =>
             MediaInfo.MusicProperties.TrackNumber > 0 ? MediaInfo.MusicProperties.TrackNumber.ToString() : string.Empty;    // Helper for binding
 
-        public BitmapImage? Thumbnail
+        public Bitmap? Thumbnail
         {
             get
             {
                 if (thumbnailRef == null) return null;
-                return thumbnailRef.TryGetTarget(out BitmapImage image) ? image : null;
+                return thumbnailRef.TryGetTarget(out var image) ? image : null;
             }
             set
             {
                 if (thumbnailRef == null && value == null) return;
-                if ((thumbnailRef?.TryGetTarget(out BitmapImage image) ?? false) && image == value) return;
-                SetProperty(ref thumbnailRef, value == null ? null : new WeakReference<BitmapImage>(value));
+                if ((thumbnailRef?.TryGetTarget(out var image) ?? false) && image == value) return;
+                SetProperty(ref thumbnailRef, value == null ? null : new WeakReference<Bitmap>(value));
             }
         }
 
@@ -79,7 +81,7 @@ namespace VLC.Net.Core.ViewModels
         [ObservableProperty]
         private bool? isPlaying;
 
-        private WeakReference<BitmapImage>? thumbnailRef;
+        private WeakReference<Bitmap>? thumbnailRef;
 
         public MediaViewModel(MediaViewModel source)
         {
@@ -113,10 +115,10 @@ namespace VLC.Net.Core.ViewModels
             Item = new Lazy<PlaybackItem?>(CreatePlaybackItem);
         }
 
-        public MediaViewModel(LibVlcService libVlcService, StorageFile file)
+        public MediaViewModel(LibVlcService libVlcService, IStorageFile file)
             : this(file, new MediaInfo(FilesHelpers.GetMediaTypeForFile(file)), libVlcService)
         {
-            Location = file.Path;
+            Location = file.Path.GetFilePath();;
             name = file.DisplayName;
             altCaption = file.Name;
         }
@@ -200,10 +202,10 @@ namespace VLC.Net.Core.ViewModels
             libVlcService.DisposeMedia(item.Media);
         }
 
-        public void UpdateSource(StorageFile file)
+        public void UpdateSource(IStorageFile file)
         {
             Source = file;
-            Name = file.DisplayName;
+            Name = file.GetDisplayName();
             AltCaption = file.Name;
         }
 
@@ -211,7 +213,7 @@ namespace VLC.Net.Core.ViewModels
         {
             switch (Source)
             {
-                case StorageFile file:
+                case IStorageFile file:
                     MediaInfo = await filesService.GetMediaInfoAsync(file);
                     break;
                 case Uri uri when await TryGetStorageFileFromUri(uri) is { } uriFile:
@@ -260,26 +262,12 @@ namespace VLC.Net.Core.ViewModels
                 UpdateSource(storageFile);
             }
 
-            if (Source is StorageFile file)
+            if (Source is IStorageFile file)
             {
-                using var source = await GetThumbnailSourceAsync(file);
-                if (source == null) return;
-                BitmapImage image = new()
-                {
-                    DecodePixelType = DecodePixelType.Logical,
-                    DecodePixelHeight = 300
-                };
-
-                try
-                {
-                    await image.SetSourceAsync(source);
-                }
-                catch (Exception)
-                {
-                    // WinRT component not found exception???
-                    return;
-                }
-
+                var bitmap = new Bitmap(file.Path.GetFilePath())
+                Bitmap scaled = bitmap.CreateScaledBitmap(
+                    new PixelSize(bitmap., 300),
+                    BitmapInterpolationMode.HighQuality);
                 Thumbnail = image;
             }
             else if (Item is { IsValueCreated: true, Value.Media: { } media } &&
