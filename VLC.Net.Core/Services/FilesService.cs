@@ -1,11 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
-using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using MetadataExtractor.Formats.Mpeg;
 using VLC.Net.Core.Enums;
 using VLC.Net.Core.Infrastructure;
 using VLC.Net.Core.Models;
-using Directory = MetadataExtractor.Directory;
 
 namespace VLC.Net.Core.Services;
 
@@ -235,45 +231,4 @@ public sealed class FilesService : IFilesService
         return picker;
     }
 
-    public async Task<Dictionary<MetadataKeys, string>>
-        GetMetadataAsync(IStorageFile file, params MetadataKeys[] metadataKeys)
-    {
-        Dictionary<MetadataKeys, string> dct = new();
-        
-        IReadOnlyList<Directory> directories;
-        await using (var stream = await file.OpenReadAsync())
-            directories = ImageMetadataReader.ReadMetadata(stream);
-
-        foreach (var key in metadataKeys)
-        {
-            LookupMetadataInDirectory(directories, key);
-            continue;
-
-            void LookupMetadataInDirectory(IReadOnlyList<Directory> readOnlyList, MetadataKeys k)
-            {
-                foreach (var directory in directories)
-                foreach (var tag in directory.Tags)
-                    if (tag.Name.Equals(k.ToString(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        dct.Add(key, tag.Description ?? string.Empty);
-                        return;
-                    }
-            }
-        }
-    }
 }
-
-public enum MetadataKeys
-{
-    Artist,
-    Album,
-    Title,
-    Genre,
-    Year,
-    Track,
-    Disc,
-    Duration,
-}
-
-public record MetadataKeyValuePair(MetadataKeys Key,
-    string Value);

@@ -1,11 +1,9 @@
 ﻿using System.Collections.Immutable;
 using Avalonia.Platform.Storage;
 using MetadataExtractor;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using VLC.Net.Core.Enums;
-using Directory = System.IO.Directory;
-using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using System.Linq;
+using Directory = MetadataExtractor.Directory;
 
 namespace VLC.Net.Core.Helpers;
 
@@ -99,9 +97,37 @@ public static class FilesHelpers
         return Path.GetFileNameWithoutExtension(file.Path.GetFilePath());
     }
 
-    public static DateTimeOffset GetDateCreated(this IStorageItem item)
+    public static DateTimeOffset? GetDateCreated(this IStorageItem item)
     {
         var properties = item.GetBasicPropertiesAsync().Result;
         var dateCreated = properties.DateCreated;
+        return dateCreated;
+    }
+
+    public static async Task<Dictionary<MetadataKeys, string>> GetMetadataAsync(
+        IStorageFile file,
+        params IEnumerable<MetadataKeys> metadataKeys)
+    {
+        Dictionary<MetadataKeys, string> dct = new();
+
+        IReadOnlyList<Directory> directories;
+        await using (var stream = await file.OpenReadAsync())
+        {
+            directories = ImageMetadataReader.ReadMetadata(stream);
+        }
+
+        foreach (var key in metadataKeys)
+        {
+            foreach (var directory in directories)
+            foreach (var tag in directory.Tags)
+                if (tag.Name.Equals(k.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    dct.Add(key, tag.Description ?? string.Empty);
+                    goto OutermostLoop;
+                }
+
+            OutermostLoop: ;
+        }
+        return dct;
     }
 }

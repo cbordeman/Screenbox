@@ -34,7 +34,6 @@ namespace VLC.Net.Core.Services
         Task<T> LoadFromDiskAsync<T>(IStorageFile file);
         Task<MediaInfo> GetMediaInfoAsync(IStorageFile file);
         
-        Task<MetadataKeyValuePair> GetMetadataAsync(IStorageFile file,
-            params string[] metadataKeys);
+        
     }
 }
